@@ -661,18 +661,21 @@ class LatentDiffusion(DDPM):
         encoder_posterior = self.encode_first_stage(x)
         z = self.get_first_stage_encoding(encoder_posterior).detach()
         ######################################
-        # noise = default(None, lambda: torch.randn_like(z))
-        # out = []
-        # for t in range(0, 1000, 250):
-        #     x_noisy = self.q_sample(x_start=z, t=t*torch.ones(x.shape[0], device=self.device).long(), noise=noise)
-        #     xrec = self.decode_first_stage(x_noisy)
-        #     out.append(xrec[3, 0].cpu().numpy())
-        # f, axarr = plt.subplots(2, 2)
-        # axarr[0, 0].imshow(out[0])
-        # axarr[0, 1].imshow(out[1])
-        # axarr[1, 0].imshow(out[2])
-        # axarr[1, 1].imshow(out[3])
-        # plt.show()
+        noise_z = default(None, lambda: torch.randn_like(z))
+        noise_x = default(None, lambda: torch.randn_like(x))
+        freq = 200
+        batch_idx = 1
+        f, axarr = plt.subplots(2, 6)
+        axarr[0, 0].imshow(x[batch_idx, 0].cpu().numpy())
+        axarr[1, 0].imshow(self.decode_first_stage(z)[batch_idx, 0].cpu().numpy())
+        for t in range(0, 5):
+            T = (freq*t*torch.ones(x.shape[0], device=self.device)).long()
+            z_noisy = self.q_sample(x_start=z, t=T, noise=noise_z)
+            x_noisy = self.q_sample(x_start=x, t=T, noise=noise_x)
+            xrec = self.decode_first_stage(z_noisy)
+            axarr[0, t % 5 + 1].imshow(x_noisy[batch_idx, 0].cpu().numpy())
+            axarr[1, t % 5 + 1].imshow(xrec[batch_idx, 0].cpu().numpy())
+        plt.show()
         #####################################
 
         if self.model.conditioning_key is not None:

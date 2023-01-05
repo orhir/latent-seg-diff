@@ -139,7 +139,7 @@ class VQModel(pl.LightningModule):
             x = x.detach()
         return x
 
-    def training_step(self, batch, batch_idx, optimizer_idx):
+    def training_step(self, batch, batch_idx, optimizer_idx=0):
         # https://github.com/pytorch/pytorch/issues/37142
         # try not to fool the heuristics
         x = self.get_input(batch, self.image_key)
@@ -182,21 +182,21 @@ class VQModel(pl.LightningModule):
                                         predicted_indices=ind
                                         )
 
-        discloss, log_dict_disc = self.loss(qloss, x, xrec, 1,
-                                            self.global_step,
-                                            last_layer=self.get_last_layer(),
-                                            split="val"+suffix,
-                                            predicted_indices=ind
-                                            )
+        # discloss, log_dict_disc = self.loss(qloss, x, xrec, 1,
+        #                                     self.global_step,
+        #                                     last_layer=self.get_last_layer(),
+        #                                     split="val"+suffix,
+        #                                     predicted_indices=ind
+        #                                     )
         rec_loss = log_dict_ae[f"val{suffix}/rec_loss"]
         self.log(f"val{suffix}/rec_loss", rec_loss,
                    prog_bar=True, logger=True, on_step=False, on_epoch=True, sync_dist=True)
         self.log(f"val{suffix}/aeloss", aeloss,
                    prog_bar=True, logger=True, on_step=False, on_epoch=True, sync_dist=True)
-        if version.parse(pl.__version__) >= version.parse('1.4.0'):
-            del log_dict_ae[f"val{suffix}/rec_loss"]
-        self.log_dict(log_dict_ae)
-        self.log_dict(log_dict_disc)
+        # if version.parse(pl.__version__) >= version.parse('1.4.0'):
+        #     del log_dict_ae[f"val{suffix}/rec_loss"]
+        # self.log_dict(log_dict_ae)
+        # self.log_dict(log_dict_disc)
         return self.log_dict
 
     def configure_optimizers(self):
